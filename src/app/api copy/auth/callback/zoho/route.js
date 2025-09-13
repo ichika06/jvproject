@@ -1,18 +1,12 @@
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const code = searchParams.get("code");
-  const error = searchParams.get("error");
 
-  if (error) {
-    // User denied or Zoho returned an error
-    return Response.json({ error: "Zoho OAuth error", details: error }, { status: 400 });
-  }
   if (!code) {
     return Response.json({ error: "Missing code" }, { status: 400 });
   }
 
   // Replace with your actual client ID, secret, and redirect URI
-  // These must match your Zoho API Console settings
   const client_id = process.env.ZOHO_CLIENT_ID;
   const client_secret = process.env.ZOHO_CLIENT_SECRET;
   const redirect_uri = "https://jtutorlink.vercel.app/api/auth/callback/zoho";
