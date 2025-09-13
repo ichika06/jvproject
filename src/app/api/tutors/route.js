@@ -2,7 +2,7 @@
 export async function GET(req) {
   // Fetch courses from Zoho People API with authentication
   const zohoUrl = "https://people.zoho.com/api/v1/courses";
-  const ZOHO_API_TOKEN = process.env.ZOHO_API_TOKEN || "YOUR_ZOHO_API_TOKEN";
+  const ZOHO_API_TOKEN = process.env.ZOHO_API_TOKEN || "1000.e9579a940f95a9acb9f1dc7deddac0d6.83ab4880230fcc949ed270a3c1b22f04";
   try {
     const res = await fetch(zohoUrl, {
       headers: {
