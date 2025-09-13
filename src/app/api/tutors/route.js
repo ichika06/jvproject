@@ -1,7 +1,7 @@
 // Proxy route for fetching tutors from external API to bypass CORS
 export async function GET(req) {
   // Fetch courses from Zoho People API with authentication
-  const zohoUrl = "https://people.zoho.com/api/v1/employee";
+  const zohoUrl = "https://www.zohoapis.com/people/api/v1/employee";
   const ZOHO_API_TOKEN = process.env.ZOHO_API_TOKEN || "1000.d970a93e0cd4d450c9984c45fa7ff936.1ace73ac23eea47495c18bad10e85a96";
   try {
     const res = await fetch(zohoUrl, {
