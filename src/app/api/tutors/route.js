@@ -1,36 +1,42 @@
 // Proxy route for fetching tutors from external API to bypass CORS
 export async function GET(req) {
-  // Fetch courses from Zoho People API with authentication
-  // Use the Zoho People api_domain from environment variable (set this from your OAuth token response)
-  const ZOHO_API_DOMAIN = process.env.ZOHO_API_DOMAIN; // e.g., https://people.zoho.com
-  const ZOHO_API_TOKEN = process.env.ZOHO_API_TOKEN || "1000.d970a93e0cd4d450c9984c45fa7ff936.1ace73ac23eea47495c18bad10e85a96";
-  if (!ZOHO_API_DOMAIN) {
-    return new Response(JSON.stringify({ error: "Missing ZOHO_API_DOMAIN. Set this in your .env from the api_domain in your Zoho OAuth token response." }), { status: 500 });
+  // Accept access_token and api_domain as query parameters for dynamic token usage
+  const { searchParams } = new URL(req.url);
+  const access_token = searchParams.get("access_token") || process.env.ZOHO_API_TOKEN || "1000.8a3d73eb872b933a1ae817f3224da1e9.30315d7ee90c3156c165f1aaa3991460";
+  const api_domain = searchParams.get("api_domain") || "https://www.zohoapis.com";
+  if (!api_domain) {
+    return new Response(JSON.stringify({ error: "Missing api_domain. Pass as query param or set ZOHO_API_DOMAIN in .env from the api_domain in your Zoho OAuth token response." }), { status: 500 });
   }
-  const zohoUrl = `${ZOHO_API_DOMAIN}/people/api/v1/employee`;
+  const zohoUrl = `${api_domain}/people/api/v1/employee`;
   try {
     const res = await fetch(zohoUrl, {
       headers: {
-        Authorization: `Zoho-oauthtoken ${ZOHO_API_TOKEN}`,
+        Authorization: `Zoho-oauthtoken ${access_token}`,
         Accept: "application/json"
       }
     });
+    if (res.status === 401) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized: Check your Zoho OAuth token." }),
+        { status: 401 }
+      );
+    }
     if (!res.ok) {
       const errText = await res.text();
       return new Response(JSON.stringify({ error: "Failed to fetch courses from Zoho", details: errText }), { status: 500 });
     }
     const data = await res.json();
     // Transform Zoho results to a tutor/course-like structure for the frontend
-    const tutors = (data.data || []).map((emp, idx) => ({
-      _id: emp.EmployeeID || `zoho-employee-${idx}`,
-      name: emp.FirstName + ' ' + emp.LastName,
-      subjects: [emp.Department || 'General'],
-      email: emp.EmailID || 'N/A',
-      phone: emp.Mobile || '',
-      experience: emp.Designation || 'N/A',
-      course_url: '', // Not available for employees
-      description: emp.Role || '',
+    const tutors = (data.employees || []).map((emp, idx) => ({
+    _id: emp.employeeId || `zoho-employee-${idx}`,
+    name: emp.firstName + ' ' + emp.lastName,
+    subjects: [emp.department || 'General'],
+    email: emp.email || 'N/A',
+    phone: emp.mobileNumber || '',
+    experience: emp.designation || 'N/A',
+    description: emp.role || '',
     }));
+
     return new Response(JSON.stringify({ data: tutors }), {
       status: 200,
       headers: { "Content-Type": "application/json" }
